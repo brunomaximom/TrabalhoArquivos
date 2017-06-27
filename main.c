@@ -9,6 +9,7 @@ struct registro{
 };
 
 int main(int argc, char **argv){
+	//Remover arquivos de execução passada
 	if(remove("arquivo1.dat") == 0 && remove("indice1.dat") == 0
 	&& remove("arquivo2.dat") == 0 && remove("indice2.dat") == 0
 	&& remove("arquivo3.dat") == 0 && remove("indice3.dat") == 0){
