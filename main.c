@@ -4,9 +4,19 @@
 #include <string.h>
 
 struct registro{
-	char cnpj[18], dataRegistro[10], dataCancelamento[10], cnpjAuditor[18];
+	char cnpj[18], dataRegistro[8], dataCancelamento[8], cnpjAuditor[18];
 	char *nomeSocial, *nomeFantasia, *motivoCancelamento, *nomeEmpresa;	
 };
+
+void help() {
+    fprintf(stderr, "\
+            [uso]  <opcoes> <argumentos>\n\
+            -h	mostra essa tela e sai.\n\
+            -r	remove registro.\n\
+            -i	insere registro.\n");
+    exit(-1) ;
+}
+
 
 int main(int argc, char **argv){
 	//Remover arquivos de execução passada
@@ -22,9 +32,9 @@ int main(int argc, char **argv){
 	FILE *csv = fopen("../SCC0215012017projeto01turmaBdadosCompanhias.csv", "rt");
 	FILE *arquivos[3] = {fopen("arquivo1.dat", "a+b"), fopen("arquivo2.dat", "a+b"), fopen("arquivo3.dat", "a+b")};
 	FILE *indices[3] = {fopen("indice1.dat", "a+b"), fopen("indice2.dat", "a+b"), fopen("indice3.dat", "a+b")};
-	char linha[500], *result, *campo, *tamanho_registro;
+	char linha[500], *result, *campo;
 	struct registro Registro;
-	int i = 0;
+	int i = 0, opcao, tamanho_registro = 0;
 	
 	Registro.nomeSocial = (char *) malloc(200);
 	Registro.nomeFantasia = (char *) malloc(200);
@@ -84,34 +94,61 @@ int main(int argc, char **argv){
 				i++;
 			}
 			
-			//conteúdo gravado ta todo bugado
 			for(int j = 0; j < 3; j++){
 				fwrite(Registro.cnpj, 1, 18, arquivos[j]);
-				fwrite(Registro.nomeSocial, 1, sizeof(Registro.nomeSocial), arquivos[j]);
+				fwrite(Registro.nomeSocial, 1, strlen(Registro.nomeSocial), arquivos[j]);
 				fwrite("|", 1, 1, arquivos[j]);
-				fwrite(Registro.nomeFantasia, 1, sizeof(Registro.nomeFantasia), arquivos[j]);
+				fwrite(Registro.nomeFantasia, 1, strlen(Registro.nomeFantasia), arquivos[j]);
 				fwrite("|", 1, 1, arquivos[j]);
-				fwrite(Registro.dataRegistro, 1, 10, arquivos[j]);
-				fwrite(Registro.dataCancelamento, 1, 10, arquivos[j]);
-				fwrite(Registro.motivoCancelamento, 1, sizeof(Registro.motivoCancelamento), arquivos[j]);
+				fwrite(Registro.dataRegistro, 1, 8, arquivos[j]);
+				fwrite(Registro.dataCancelamento, 1, 8, arquivos[j]);
+				fwrite(Registro.motivoCancelamento, 1, strlen(Registro.motivoCancelamento), arquivos[j]);
 				fwrite("|", 1, 1, arquivos[j]);
-				fwrite(Registro.nomeEmpresa, 1, sizeof(Registro.nomeEmpresa), arquivos[j]);
+				fwrite(Registro.nomeEmpresa, 1, strlen(Registro.nomeEmpresa), arquivos[j]);
 				fwrite("|", 1, 1, arquivos[j]);
 				fwrite(Registro.cnpjAuditor, 1, 18, arquivos[j]);
-				fwrite("#", 1, 1, arquivos[j]);
+				fwrite("#\n", 1, 2, arquivos[j]); //delimitador de registro é #\n
 				
 				fwrite(Registro.cnpj, 1, 18, indices[j]);
 				fwrite("\t", 1, 1, indices[j]);
-				
-				//reaproveita o i que nesse for é inútil
-				i = sizeof(Registro); 
-				sprintf(&tamanho_registro, "%d", i);
-				
-				//grava o tamanho do registro no arquivo de índice
-				fwrite(&tamanho_registro, 1, sizeof(tamanho_registro), indices[j]);
+			}
+			
+			//grava o tamanho do registro no arquivo de índice
+			tamanho_registro += strlen(Registro.cnpj) + strlen(Registro.nomeSocial) +
+			strlen(Registro.nomeFantasia) + strlen(Registro.dataRegistro) +
+			strlen(Registro.dataCancelamento) + strlen(Registro.motivoCancelamento) +
+			strlen(Registro.nomeEmpresa) + strlen(Registro.cnpjAuditor);
+			printf("%d\n", tamanho_registro);
+			sprintf(result, "%d", tamanho_registro);
+			for(int j = 0; j < 3; j++){
+				fwrite(result, 1, 5, indices[j]);	//5 porque é quantos caracteres no maximo ele terá
 				fwrite("\n", 1, 1, indices[j]);
 			}
+			
 			i = 0;
+		}
+	}
+	
+	/*******************************/
+	/* FUNCIONALIDADES COMEÇAM AQUI*/
+	/*******************************/
+	
+	//se nenhum parametro for passado printa a função de help
+	if(argc < 2) help();
+	
+	while((opcao = getopt(argc, argv, "hr:i:")) > 0){
+		switch(opcao){
+			case 'h':
+				help();
+				break;
+			case 'r':
+				
+				break;
+			case 'i':
+				
+				break;
+			default:
+				printf("Opção inválida. Tente novamente\n");
 		}
 	}
 	
