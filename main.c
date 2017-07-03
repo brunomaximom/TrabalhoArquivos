@@ -1,22 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
+
+/* REGISTRO DE DADOS COM CAMPOS DE TAMANHO FIXO E CAMPOS DE TAMANHO VARIÁVEL */
 struct registro{
 	char cnpj[18], dataRegistro[8], dataCancelamento[8], cnpjAuditor[18];
 	char *nomeSocial, *nomeFantasia, *motivoCancelamento, *nomeEmpresa;	
 };
-
-void help() {
-    fprintf(stderr, "\
-            [uso]  <opcoes> <argumentos>\n\
-            -h	mostra essa tela e sai.\n\
-            -r	remove registro.\n\
-            -i	insere registro.\n");
-    exit(-1) ;
+/* FUNÇÃO DE MENU */
+void menu(){
+	printf("(1) Remoção lógica dos registros\n");
+	printf("(2) Inserir registros\n");
+	printf("(3) Visualizar estatisticas sobre arquivo de índice\n");
+	printf("(4) Visualizar estatisticas sobre registros removidos\n");
+	printf("(0) Sair");
 }
 
+void inserir(){
+	
+}
 
 int main(int argc, char **argv){
 	//Remover arquivos de execução passada
@@ -32,9 +35,9 @@ int main(int argc, char **argv){
 	FILE *csv = fopen("../SCC0215012017projeto01turmaBdadosCompanhias.csv", "rt");
 	FILE *arquivos[3] = {fopen("arquivo1.dat", "a+b"), fopen("arquivo2.dat", "a+b"), fopen("arquivo3.dat", "a+b")};
 	FILE *indices[3] = {fopen("indice1.dat", "a+b"), fopen("indice2.dat", "a+b"), fopen("indice3.dat", "a+b")};
-	char linha[500], *result, *campo;
+	char linha[500], *result, *campo, cnpj[18];
 	struct registro Registro;
-	int i = 0, opcao, tamanho_registro = 0;
+	int i = 0, tamanho_registro = 0, opcao, qual;
 	
 	Registro.nomeSocial = (char *) malloc(200);
 	Registro.nomeFantasia = (char *) malloc(200);
@@ -132,30 +135,39 @@ int main(int argc, char **argv){
 	/*******************************/
 	/* FUNCIONALIDADES COMEÇAM AQUI*/
 	/*******************************/
-	
-	//se nenhum parametro for passado printa a função de help
-	if(argc < 2) help();
-	
-	while((opcao = getopt(argc, argv, "hr:i:")) > 0){
+	menu();
+	while(1){
 		switch(opcao){
-			case 'h':
-				help();
+			case 1:
+				printf("Qual arquivo deseja remover um registro?\n");
+				scanf("%d", &qual);
+				printf("Digite o CNPJ desejado: \n");
+				scanf("%s", cnpj);
+				while(!feof(indices[qual-1])){
+					printf("bla");
+					result = fgets(linha, 18, indices[qual-1]);
+					if(result){
+						strtok(linha, "\t");
+						puts(linha);
+					}
+				}
 				break;
-			case 'r':
+			case 2:
+				inserir();
+				break;
+			case 3:
 				
 				break;
-			case 'i':
+			case 4:
 				
 				break;
-			default:
-				printf("Opção inválida. Tente novamente\n");
+			case 0:
+				fclose(csv);
+				for(int j = 0; j < 3; j++){
+					fclose(arquivos[j]);
+					fclose(indices[j]);
+				}
+				return 0;
 		}
 	}
-	
-	fclose(csv);
-	for(int j = 0; j < 3; j++){
-		fclose(arquivos[j]);
-		fclose(indices[j]);
-	}
-    return 0;
 }
