@@ -5,7 +5,7 @@
 
 /* REGISTRO DE DADOS COM CAMPOS DE TAMANHO FIXO E CAMPOS DE TAMANHO VARIÁVEL */
 struct registro{
-	char cnpj[18], dataRegistro[8], dataCancelamento[8], cnpjAuditor[18];
+	char cnpj[18], dataRegistro[10], dataCancelamento[10], cnpjAuditor[18];
 	char *nomeSocial, *nomeFantasia, *motivoCancelamento, *nomeEmpresa;	
 };
 /* FUNÇÃO DE MENU */
@@ -37,7 +37,7 @@ int main(int argc, char **argv){
 	FILE *indices[3] = {fopen("indice1.dat", "a+b"), fopen("indice2.dat", "a+b"), fopen("indice3.dat", "a+b")};
 	char linha[500], *result, *campo, cnpj[18];
 	struct registro Registro;
-	int i = 0, tamanho_registro = 0, opcao, qual;
+	int i = 0, tamanho_registro = 0, opcao, qual, bytes, posicao = 0;
 	
 	Registro.nomeSocial = (char *) malloc(200);
 	Registro.nomeFantasia = (char *) malloc(200);
@@ -117,14 +117,19 @@ int main(int argc, char **argv){
 			}
 			
 			//grava o tamanho do registro no arquivo de índice
-			tamanho_registro += strlen(Registro.cnpj) + strlen(Registro.nomeSocial) +
-			strlen(Registro.nomeFantasia) + strlen(Registro.dataRegistro) +
-			strlen(Registro.dataCancelamento) + strlen(Registro.motivoCancelamento) +
-			strlen(Registro.nomeEmpresa) + strlen(Registro.cnpjAuditor);
+			tamanho_registro += sizeof(Registro.cnpj) + strlen(Registro.nomeSocial) +
+			strlen(Registro.nomeFantasia) + sizeof(Registro.dataRegistro) +
+			sizeof(Registro.dataCancelamento) + strlen(Registro.motivoCancelamento) +
+			strlen(Registro.nomeEmpresa) + sizeof(Registro.cnpjAuditor) + 1;
 			printf("%d\n", tamanho_registro);
-			sprintf(result, "%d", tamanho_registro);
+			sprintf(result, "%d", posicao); //reusando result que está inútil
+			
+			//evitar que o posicao seja atualizado a qualquer custo!
+			
+			posicao = tamanho_registro;
 			for(int j = 0; j < 3; j++){
 				fwrite(result, 1, 5, indices[j]);	//5 porque é quantos caracteres no maximo ele terá
+				fwrite("#", 1, 1, indices[j]);
 				fwrite("\n", 1, 1, indices[j]);
 			}
 			
@@ -132,25 +137,59 @@ int main(int argc, char **argv){
 		}
 	}
 	
+	fclose(csv);
+	for(int j = 0; j < 3; j++){
+		fclose(arquivos[j]);
+		fclose(indices[j]);
+	}
 	/*******************************/
 	/* FUNCIONALIDADES COMEÇAM AQUI*/
 	/*******************************/
-	menu();
+	
 	while(1){
+		printf("Digite a opcao desejada do menu\n");
+		menu();
+		scanf("%d", &opcao);
 		switch(opcao){
 			case 1:
 				printf("Qual arquivo deseja remover um registro?\n");
 				scanf("%d", &qual);
+				if(qual > 3 || qual < 1){
+					printf("Escolha entre arquivos 1, 2 ou 3\n");
+					break;
+				}
+				
+				if(qual == 1){
+					indices[qual-1] = fopen("indice1.dat", "r+b");
+					arquivos[qual-1] = fopen("arquivo1.dat", "r+b");
+				}
+				if(qual == 2){
+					indices[qual-1] = fopen("indice2.dat", "r+b");
+					arquivos[qual-1] = fopen("arquivo2.dat", "r+b");
+				}
+				if(qual == 3){
+					indices[qual-1] = fopen("indice3.dat", "r+b");
+					arquivos[qual-1] = fopen("arquivo3.dat", "r+b");
+				}
+				
+				rewind(indices[qual-1]);
+				rewind(arquivos[qual-1]);
+				printf("HUE%d\n", ftell(arquivos[qual-1]));
 				printf("Digite o CNPJ desejado: \n");
 				scanf("%s", cnpj);
 				while(!feof(indices[qual-1])){
-					printf("bla");
-					result = fgets(linha, 18, indices[qual-1]);
+					result = fgets(linha, 500, indices[qual-1]);
 					if(result){
 						strtok(linha, "\t");
-						puts(linha);
+						if(!strcmp(linha, cnpj)){
+							campo = strtok(NULL, "#");	//reutilizando campo que está inútil
+							bytes = atoi(campo);
+						}
 					}
 				}
+				fseek(arquivos[qual-1], bytes, SEEK_SET);
+				printf("HUE%d\n", ftell(arquivos[qual-1]));
+				fwrite("*", 1, 1, arquivos[qual-1]);
 				break;
 			case 2:
 				inserir();
@@ -162,11 +201,6 @@ int main(int argc, char **argv){
 				
 				break;
 			case 0:
-				fclose(csv);
-				for(int j = 0; j < 3; j++){
-					fclose(arquivos[j]);
-					fclose(indices[j]);
-				}
 				return 0;
 		}
 	}
